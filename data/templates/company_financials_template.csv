@@ -1,0 +1,8 @@
+company,metric,period,value,unit,observation_date,source,frequency,notes
+Golden Ocean,revenue,Q2 2026,215.4,usd_million,2026-07-20,Company quarterly report,quarterly,Example row - replace with real observation
+Golden Ocean,ebitda,Q2 2026,95.1,usd_million,2026-07-20,Company quarterly report,quarterly,Example row - replace with real observation
+Golden Ocean,net_debt,Q2 2026,410.0,usd_million,2026-07-20,Company quarterly report,quarterly,Example row - replace with real observation
+Golden Ocean,cash,Q2 2026,80.2,usd_million,2026-07-20,Company quarterly report,quarterly,Example row - replace with real observation
+Golden Ocean,dividend_per_share,Q2 2026,0.20,usd_per_share,2026-07-20,Company quarterly report,quarterly,Example row - replace with real observation
+Golden Ocean,fleet_size,Q2 2026,93,vessels,2026-07-20,Company quarterly report,quarterly,Example row - replace with real observation
+Golden Ocean,contract_coverage_pct,Q2 2026,35.0,percent,2026-07-20,Company quarterly report,quarterly,Example row - replace with real observation

@@ -1,0 +1,3 @@
+segment,metric,value,unit,observation_date,source,frequency,notes
+LPG,scrapping_units,3,vessels,2026-06-30,Clarksons,monthly,Example row - replace with real observation
+LPG,scrapping_dwt,45000,dwt,2026-06-30,Clarksons,monthly,Example row - replace with real observation

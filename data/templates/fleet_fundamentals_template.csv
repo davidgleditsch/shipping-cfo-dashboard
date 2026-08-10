@@ -1,0 +1,4 @@
+segment,metric,value,unit,observation_date,source,frequency,notes
+Dry bulk,trading_fleet_count,4200,vessels,2026-06-30,Clarksons,monthly,Example row - replace with real observation
+Dry bulk,avg_fleet_age_years,11.2,years,2026-06-30,Clarksons,quarterly,Example row - replace with real observation
+Dry bulk,pct_fleet_over_20yrs,8.5,percent,2026-06-30,Clarksons,quarterly,Example row - replace with real observation

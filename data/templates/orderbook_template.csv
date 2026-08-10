@@ -1,0 +1,4 @@
+segment,metric,value,unit,observation_date,source,frequency,notes
+Container,orderbook_units,650,vessels,2026-06-30,Clarksons,monthly,Example row - replace with real observation
+Container,orderbook_pct_fleet,28.4,percent,2026-06-30,Clarksons,monthly,Example row - replace with real observation
+Container,expected_deliveries_units,210,vessels,2026-06-30,Clarksons,monthly,Example row - replace with real observation

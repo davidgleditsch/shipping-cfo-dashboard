@@ -1,0 +1,3 @@
+segment,metric,value,unit,observation_date,source,frequency,notes
+Dry bulk,BDI,1450,index_pts,2026-07-24,Baltic Exchange,daily,Example row - replace with real observation
+Container,SCFI,1920,index_pts,2026-07-24,Drewry,weekly,Example row - replace with real observation

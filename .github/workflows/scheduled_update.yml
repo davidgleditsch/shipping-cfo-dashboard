@@ -1,0 +1,69 @@
+name: Scheduled data update and dashboard publish
+
+on:
+  schedule:
+    # Runs at 06:00 UTC daily (~07:00/08:00 Norway time depending on DST). GitHub Actions cron is UTC only.
+    - cron: "0 6 * * *"
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  update-and-publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        # Only what update_data.py and generate_static_dashboard.py need -- no streamlit/plotly/pyarrow,
+        # so this stays fast even though the interactive app's requirements.txt is heavier.
+        run: pip install --quiet duckdb pandas python-dotenv feedparser yfinance
+
+      - name: Refresh free/live data sources
+        env:
+          LOG_LEVEL: INFO
+          # Add licensed-source API keys here as repository secrets once purchased, e.g.:
+          # CLARKSONS_API_KEY: ${{ secrets.CLARKSONS_API_KEY }}
+        run: python scripts/update_data.py
+
+      - name: Generate static HTML dashboard
+        run: |
+          mkdir -p public
+          python scripts/generate_static_dashboard.py public/index.html
+
+      - name: Commit updated DuckDB file
+        # The .duckdb file is gitignored for local/dev use (so nobody accidentally commits their own
+        # machine's file). This step force-adds the one canonical file so scheduled runs persist
+        # history in the repo. If you'd rather not version a binary DB file, remove this step and the
+        # `git add -f` line below and instead upload it as a workflow artifact.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f data/duckdb/shipping.duckdb
+          git diff --cached --quiet && echo "No data changes to commit." || git commit -m "chore: scheduled data refresh [skip ci]"
+          git push
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
