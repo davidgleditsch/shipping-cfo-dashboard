@@ -80,15 +80,20 @@ def get_company_views(conn: duckdb.DuckDBPyConnection) -> list[CompanyView]:
             rows = co_fin[co_fin["metric"] == metric_key] if not co_fin.empty else pd.DataFrame()
             if rows.empty:
                 cv.financials[metric_key] = {
-                    "label": label, "value": None, "unit": None,
+                    "label": label, "value": None, "unit": None, "period": None,
                     "source_meta": SourceMeta(source="No manual data uploaded", observation_date=None,
                                                frequency="n/a", status=DataStatus.UNAVAILABLE),
                 }
             else:
                 latest = rows.iloc[0]
                 status = DataStatus(latest["status"]) if latest["status"] in DataStatus._value2member_map_ else DataStatus.MANUAL
+                # "period" is the reporting period the figure belongs to (e.g. "Q1 2026", "FY2025"),
+                # distinct from observation_date (when the analyst recorded it) -- shown to the user so
+                # a Q1 figure is never mistaken for a just-released Q2 number. Older uploads made before
+                # this column was consistently populated fall back to "n/a" rather than a guess.
+                period = latest["period"] if "period" in latest and pd.notna(latest["period"]) else None
                 cv.financials[metric_key] = {
-                    "label": label, "value": float(latest["value"]), "unit": latest["unit"],
+                    "label": label, "value": float(latest["value"]), "unit": latest["unit"], "period": period,
                     "source_meta": SourceMeta(source=latest["source"], observation_date=latest["observation_date"],
                                                frequency=latest["frequency"], status=status),
                 }

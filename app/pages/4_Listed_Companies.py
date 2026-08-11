@@ -70,7 +70,9 @@ fin_cols = st.columns(4)
 for i, (metric_key, data) in enumerate(view.financials.items()):
     with fin_cols[i % 4]:
         val = f"{fmt_number(data['value'])} {data['unit'] or ''}" if data["value"] is not None else "Not available"
-        st.metric(data["label"], val)
+        st.metric(data["label"], val, help=f"Period: {data.get('period') or 'n/a'}")
+        if data.get("period"):
+            st.caption(f"Period: {data['period']}")
         render_source_caption(data["source_meta"])
         st.markdown("&nbsp;")
 

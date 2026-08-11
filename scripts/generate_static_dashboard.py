@@ -48,11 +48,17 @@ h2 { font-size: 1.2rem; margin: 36px 0 12px 0; padding-bottom: 6px; border-botto
 h3 { font-size: 0.95rem; margin: 0 0 6px 0; }
 .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.grid-wide { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
 .metric-value { font-size: 1.35rem; font-weight: 700; margin: 4px 0; }
 .metric-label { font-size: 0.8rem; color: var(--muted); }
-.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;
-         text-transform: uppercase; letter-spacing: 0.02em; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.68rem; font-weight: 700;
+         text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; }
+.fin-table td { vertical-align: top; }
+.fin-table .fin-metric { width: 34%; font-weight: 600; }
+.fin-table .fin-value { width: 30%; }
+.fin-table .fin-period { width: 16%; color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
+.fin-table .fin-status { width: 20%; text-align: right; }
 .badge-live { background: color-mix(in srgb, var(--live) 15%, white); color: var(--live); }
 .badge-delayed { background: color-mix(in srgb, var(--delayed) 15%, white); color: var(--delayed); }
 .badge-manual { background: color-mix(in srgb, var(--manual) 15%, white); color: var(--manual); }
@@ -104,6 +110,27 @@ def fmt_num(v, decimals=1) -> str:
         return f"{v:,.{decimals}f}"
     except (TypeError, ValueError):
         return "—"
+
+
+def fmt_financial(v, unit: str | None) -> str:
+    """Format a company-financials value with unit-appropriate precision.
+
+    Vessel counts are whole numbers ("51 vessels", not "51.0 vessels"). Per-share figures need up
+    to 4 decimals or a NOK 0.2877 dividend silently rounds to "0.3" -- misleading for a CFO number.
+    Trailing zeros are trimmed so a flat USD 0.75 doesn't render as "0.7500".
+    """
+    if v is None:
+        return "—"
+    if unit == "vessels":
+        return f"{v:,.0f}"
+    if unit == "usd_per_share":
+        s = f"{v:.4f}".rstrip("0")
+        if s.endswith("."):
+            s += "00"
+        elif len(s.split(".")[-1]) < 2:
+            s += "0" * (2 - len(s.split(".")[-1]))
+        return s
+    return f"{v:,.1f}"
 
 
 def fmt_pct(v, decimals=1) -> str:
@@ -218,16 +245,25 @@ def render_companies_section(conn) -> str:
 
         fin_rows = []
         for metric_key, data in v.financials.items():
-            val = f"{fmt_num(data['value'])} {esc(data['unit'] or '')}" if data["value"] is not None else "Not available"
-            fin_rows.append(f"<tr><td>{esc(data['label'])}</td><td>{val}</td><td>{badge(data['source_meta'].status)}</td></tr>")
-        fin_table = "<table>" + "".join(fin_rows) + "</table>"
+            meta = data["source_meta"]
+            val = f"{fmt_financial(data['value'], data['unit'])} {esc(data['unit'] or '')}" if data["value"] is not None else "Not available"
+            period = esc(data.get("period")) if data.get("period") else "—"
+            date_str = meta.observation_date.isoformat() if meta.observation_date else "n/a"
+            title = f"{esc(meta.source)} · observed {esc(date_str)} · {esc(meta.frequency)}"
+            fin_rows.append(
+                f'<tr title="{title}"><td class="fin-metric">{esc(data["label"])}</td>'
+                f'<td class="fin-value">{val}</td><td class="fin-period">{period}</td>'
+                f'<td class="fin-status">{badge(meta.status)}</td></tr>'
+            )
+        fin_table = (f'<table class="fin-table"><tr><th>Metric</th><th>Value</th><th>Period</th>'
+                     f'<th style="text-align:right;">Status</th></tr>' + "".join(fin_rows) + "</table>")
 
         cards.append(
             f'<div class="card"><h3>{esc(v.name)} ({esc(v.ticker)}) — {esc(v.segment)}</h3>'
             f'{price_block}<div style="margin-top:10px;">{fin_table}</div>'
             f'<p class="src">NAV: {esc(v.nav_status)}</p></div>'
         )
-    return fx_note + f'<div class="grid">{"".join(cards)}</div>'
+    return fx_note + f'<div class="grid-wide">{"".join(cards)}</div>'
 
 
 def render_news_section(conn) -> str:
