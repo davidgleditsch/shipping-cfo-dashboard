@@ -54,6 +54,29 @@ def test_latest_per_key(conn):
     assert latest.iloc[0]["value"] == 1420.0
 
 
+def test_news_events_dedupes_on_source_and_url(conn):
+    """Regression test: re-fetching an RSS/filing feed must not duplicate the same article.
+
+    Before `news_events` had a key in TABLE_KEY_COLUMNS, every scheduled run re-inserted whatever
+    the feed currently returns (feeds always include their most recent items), so the same headline
+    piled up over and over in "Five things that matter" and the News page.
+    """
+    df = pd.DataFrame([{
+        "published_date": "2026-08-11T10:00:00", "category": "Freight markets",
+        "headline": "Baltic Dry Index falls to 3046, down 37 points", "summary": "",
+        "source": "Hellenic Shipping News", "url": "https://www.hellenicshippingnews.com/bdi-falls",
+        "status": "live",
+    }])
+    n1 = upsert_dataframe(conn, "news_events", df)
+    assert n1 == 1
+    # Same run pulling the same feed again a few minutes later (or a second feed carrying the
+    # identical story) must not create a duplicate row.
+    n2 = upsert_dataframe(conn, "news_events", df)
+    assert n2 == 0
+    total = conn.execute("SELECT COUNT(*) FROM news_events").fetchone()[0]
+    assert total == 1
+
+
 def test_log_manual_upload(conn):
     log_manual_upload(conn, "test.csv", "market_data_daily", 5, "valid", "")
     row = conn.execute("SELECT * FROM manual_upload_log").fetchone()

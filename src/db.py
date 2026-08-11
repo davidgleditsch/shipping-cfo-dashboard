@@ -107,6 +107,11 @@ TABLE_KEY_COLUMNS = {
     "fleet_fundamentals": ["segment", "metric", "observation_date", "source"],
     "company_market_data": ["company", "metric", "observation_date", "source"],
     "company_financials": ["company", "metric", "period", "source"],
+    # Without a key here, every scheduled run re-inserts the same RSS/filing-alert items it fetched
+    # last time (the feeds always return their most recent N items), so "Five things that matter"
+    # and the News page silently fill up with duplicates of the same headline. (source, url) is
+    # stable per article/filing across both the RSS adapter and the SEC filing-alerts adapter.
+    "news_events": ["source", "url"],
 }
 
 
