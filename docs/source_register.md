@@ -16,12 +16,25 @@ paid input that has not been purchased.
 | Yahoo Finance (`yfinance`) | Share price, volume for all 10 watchlist tickers | Daily, 15-20 min delayed | Free |
 | Frankfurter (ECB reference rates) | USD/NOK, USD/EUR FX rates | Daily | Free |
 | SEC EDGAR | Filing alerts (6-K/20-F) for Hafnia, BW LPG, Flex LNG — the three SEC-registered names | As filed | Free |
+| SEC EDGAR XBRL company facts | Revenue and cash (annual, from 20-F), plus a *derived* net debt when both tags exist, for Hafnia, BW LPG, Flex LNG | Annual (20-F only — FPI 6-Ks aren't reliably XBRL-tagged) | Free |
 | Hellenic Shipping News + gCaptain RSS | General shipping headlines, auto-categorized | As published | Free |
 
-These four were implemented in Step 2 as "the reliable free sources first." All four degrade
-gracefully — if the feed is unreachable, the page shows "Not available" rather than crashing or
-guessing (verified in this session: this sandbox's own network proxy blocks these exact domains,
-and the app correctly logged warnings and kept running instead of failing).
+The first three were implemented in Step 2 as "the reliable free sources first." The SEC XBRL
+company-facts adapter (`src/adapters/sec_edgar_xbrl_adapter.py`) was added afterward to close part
+of the company-financials gap: the original SEC EDGAR adapter only flagged *that* a filing
+happened (a news item), never the numbers inside it. All of these degrade gracefully — if the feed
+is unreachable, the page shows "Not available" rather than crashing or guessing (verified in this
+session: this sandbox's own network proxy blocks these exact domains, and the app correctly logged
+warnings and kept running instead of failing).
+
+The XBRL adapter deliberately does **not** attempt EBITDA, fleet size, contract coverage % or spot
+exposure % — none of these has a standard tag a foreign private issuer is required to use, and
+guessing which reported number is "EBITDA" from free text would be exactly the kind of
+interpolation the project rules forbid. It also only extracts **annual** figures (from the 20-F);
+quarterly numbers (the 6-K press releases) remain a manual-CSV gap because FPI 6-Ks are not
+reliably XBRL-tagged. See `tests/test_sec_edgar_xbrl_adapter.py` for the concept-matching and
+graceful-degradation behaviour, including the explicit test that a 6-K-form fact is excluded even
+if one happened to be tagged.
 
 ## What still requires a paid source or manual input, and which one
 

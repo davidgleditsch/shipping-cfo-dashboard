@@ -19,6 +19,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from src.adapters.fx_adapter import FXRateAdapter
 from src.adapters.news_rss_adapter import NewsRSSAdapter
 from src.adapters.sec_edgar_adapter import SECEdgarFilingsAdapter
+from src.adapters.sec_edgar_xbrl_adapter import SECEdgarXBRLFinancialsAdapter
 from src.adapters.yfinance_adapter import YFinanceMarketAdapter
 from src.db import get_connection, upsert_dataframe
 from src.utils.logging_config import get_logger
@@ -54,6 +55,8 @@ def main() -> int:
                             FXRateAdapter().fetch, conn)
     total_inserted += _run("SEC EDGAR (filing alerts)", "news_events",
                             SECEdgarFilingsAdapter().fetch, conn)
+    total_inserted += _run("SEC EDGAR (XBRL company financials, annual)", "company_financials",
+                            SECEdgarXBRLFinancialsAdapter().fetch, conn)
     total_inserted += _run("Public RSS (shipping news)", "news_events",
                             NewsRSSAdapter().fetch, conn)
 

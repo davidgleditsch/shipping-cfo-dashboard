@@ -8,3 +8,4 @@ logs/
 .streamlit/secrets.toml
 .pytest_cache/
 *.egg-info/
+data/duckdb/shipping.duckdb.wal.bak
