@@ -1,0 +1,36 @@
+company,metric,period,value,unit,observation_date,source,frequency,notes
+Wallenius Wilhelmsen,revenue,Q1 2026,1253.0,usd_million,2026-05-06,"Wallenius Wilhelmsen Q1 2026 report, walleniuswilhelmsen.com, published 2026-05-06",quarterly,"Total revenues, down 1% QoQ"
+Wallenius Wilhelmsen,ebitda,Q1 2026,389.0,usd_million,2026-05-06,"Wallenius Wilhelmsen Q1 2026 report, walleniuswilhelmsen.com, published 2026-05-06",quarterly,"Adjusted EBITDA, down 3% QoQ"
+Wallenius Wilhelmsen,net_debt,Q1 2026,2065.0,usd_million,2026-05-06,"Wallenius Wilhelmsen Q1 2026 earnings materials (Investing.com transcript), Q1 2026",quarterly,"Net interest-bearing debt (NIBD), up 19% QoQ mainly due to dividend payout"
+Wallenius Wilhelmsen,fleet_size,Q1 2026,127.0,vessels,2025-12-31,Wallenius Wilhelmsen Q1 2026 earnings materials (fleet count as of FY2025 year-end),quarterly,Most recently disclosed fleet count as of FY2025 year-end; not a new Q1-specific count
+Hoegh Autoliners,revenue,Q1 2026,360.0,usd_million,2026-05-08,"Hoegh Autoliners Q1 2026 press release, hoeghautoliners.com, published 2026-05-08",quarterly,Gross revenue
+Hoegh Autoliners,ebitda,Q1 2026,145.0,usd_million,2026-05-08,"Hoegh Autoliners Q1 2026 press release, hoeghautoliners.com, published 2026-05-08",quarterly,Operating profit (EBITDA)
+Hoegh Autoliners,dividend_per_share,Q1 2026,0.4927,usd_per_share,2026-05-08,"Hoegh Autoliners Q1 2026 press release, hoeghautoliners.com, published 2026-05-08",quarterly,"Declared for Q1 2026, paid May 2026; USD 94m total"
+Hoegh Autoliners,fleet_size,Q1 2026,40.0,vessels,2026-05-08,"Hoegh Autoliners Q1 2026 press release, hoeghautoliners.com, published 2026-05-08",quarterly,"""Operates around 40 RoRo vessels"" per company description in the release"
+MPC Container Ships,revenue,Q1 2026,118.9,usd_million,2026-05-27,"MPC Container Ships Q1 2026 press release, mpc-container.com, published 2026-05-27",quarterly,Operating revenues
+MPC Container Ships,ebitda,Q1 2026,68.0,usd_million,2026-05-27,"MPC Container Ships Q1 2026 press release, mpc-container.com, published 2026-05-27",quarterly,
+MPC Container Ships,dividend_per_share,Q1 2026,0.04,usd_per_share,2026-05-27,"MPC Container Ships Q1 2026 press release, mpc-container.com, published 2026-05-27",quarterly,Quarterly recurring dividend
+MPC Container Ships,fleet_size,Q1 2026,51.0,vessels,2026-05-27,"MPC Container Ships Q1 2026 press release, mpc-container.com, published 2026-05-27",quarterly,"~130,000 TEU on the water; plus 17 newbuildings on order (~170,000 TEU incl. orderbook)"
+MPC Container Ships,contract_coverage_pct,Q1 2026,99.0,percent,2026-05-27,"MPC Container Ships Q1 2026 press release, mpc-container.com, published 2026-05-27",quarterly,Share of 2026 open days covered by charter backlog
+MPC Container Ships,spot_exposure_pct,Q1 2026,1.0,percent,2026-05-27,Derived as 100% minus reported 2026 contract coverage (MPC Container Ships Q1 2026 press release),quarterly,Complement of contract_coverage_pct
+Odfjell,cash,Q1 2026,131.0,usd_million,2026-05-06,"Odfjell SE 1Q26 results, odfjell.com, published 2026-05-06",quarterly,Cash and cash equivalents
+Odfjell,fleet_size,Q1 2026,72.0,vessels,2026-04-10,"Odfjell SE 1Q26 results, odfjell.com, published 2026-05-06",quarterly,"38 owned, 9 bareboat, 22 time-chartered, 3 pool vessels as of 10 Apr 2026"
+Klaveness Combination Carriers,revenue,Q1 2026,47.0,usd_million,2026-04-28,"KCC Q1 2026 report, mfn.se / combinationcarriers.com, published 2026-04-28",quarterly,"Company-reported net revenue (TCE income basis), not gross freight revenue"
+Klaveness Combination Carriers,ebitda,Q1 2026,29.3,usd_million,2026-04-28,"KCC Q1 2026 report, mfn.se / combinationcarriers.com, published 2026-04-28",quarterly,
+Klaveness Combination Carriers,dividend_per_share,Q1 2026,0.25,usd_per_share,2026-04-28,"KCC Q1 2026 report, mfn.se / combinationcarriers.com, published 2026-04-28",quarterly,"USD 14.8m total, 81% of adjusted cash flow to equity"
+Klaveness Combination Carriers,fleet_size,Q1 2026,18.0,vessels,2026-04-28,"KCC Q1 2026 report, mfn.se / combinationcarriers.com, published 2026-04-28",quarterly,Ten CABU and eight CLEANBU vessels per company description in the release
+Hafnia,revenue,Q1 2026,412.9,usd_million,2026-05-26,"Hafnia Limited Q1 2026 financial results, businesswire.com, published 2026-05-26",quarterly,Operating revenue
+Hafnia,ebitda,Q1 2026,198.6,usd_million,2026-05-26,"Hafnia Limited Q1 2026 financial results, businesswire.com, published 2026-05-26",quarterly,"Adjusted EBITDA, +58.8% YoY"
+Hafnia,cash,Q1 2026,146.5,usd_million,2026-05-26,"Hafnia Limited Q1 2026 financial results, businesswire.com, published 2026-05-26",quarterly,Banked cash and cash on hand
+Hafnia,dividend_per_share,Q1 2026,0.2877,usd_per_share,2026-05-26,"Hafnia Limited Q1 2026 financial results, businesswire.com, published 2026-05-26",quarterly,"80% payout ratio, USD 143.8m total"
+BW LPG,dividend_per_share,Q1 2026,0.78,usd_per_share,2026-06-02,"BW LPG Limited Q1 2026 financial results, bwlpg.com, published 2026-06-02",quarterly,USD 0.67 from 100% of Shipping NPAT + USD 0.11 capital return from Product Services 2025
+BW LPG,contract_coverage_pct,Q1 2026,53.0,percent,2026-06-02,"BW LPG Limited Q1 2026 financial results, bwlpg.com, published 2026-06-02",quarterly,"Shipping time-charter coverage of available days at ~USD 48,200/day average"
+BW LPG,spot_exposure_pct,Q1 2026,47.0,percent,2026-06-02,Derived as 100% minus reported Q1 2026 time-charter coverage (BW LPG Q1 2026 financial results),quarterly,Complement of contract_coverage_pct
+BW LPG,fleet_size,Q1 2026,50.0,vessels,2026-06-02,"BW LPG company description, Q1 2026 release, bwlpg.com",quarterly,"""Fleet of about 50 VLGCs"" per company boilerplate; not a precise Q1-dated count"
+Flex LNG,revenue,Q1 2026,80.5,usd_million,2026-05-13,"Flex LNG Q1 2026 earnings release, flexlng.com, published 2026-05-13",quarterly,Vessel operating revenues
+Flex LNG,ebitda,Q1 2026,53.2,usd_million,2026-05-13,"Flex LNG Q1 2026 earnings release, flexlng.com, published 2026-05-13",quarterly,Adjusted EBITDA
+Flex LNG,cash,Q1 2026,389.1,usd_million,2026-05-13,"Flex LNG Q1 2026 earnings materials (SEC 6-K), published 2026-05-13",quarterly,"Cash and cash equivalents, incl. fully drawn RCF tranches"
+Flex LNG,net_debt,Q1 2026,1431.9,usd_million,2026-05-13,"Derived: long-term debt USD 1,821.0m minus cash USD 389.1m, both from Flex LNG Q1 2026 materials",quarterly,"Estimated/derived, not a single reported line item"
+Flex LNG,dividend_per_share,Q1 2026,0.75,usd_per_share,2026-05-13,"Flex LNG Q1 2026 earnings release, flexlng.com, published 2026-05-13",quarterly,19th consecutive quarterly dividend of USD 0.75/share
+Flex LNG,contract_coverage_pct,Q1 2026,91.0,percent,2026-05-13,"Flex LNG Q1 2026 earnings release, flexlng.com, published 2026-05-13",quarterly,"Share of remaining 2026 days covered, per CEO commentary"
+Flex LNG,fleet_size,Q1 2026,13.0,vessels,2026-05-13,"Flex LNG Q1 2026 earnings release, flexlng.com, published 2026-05-13",quarterly,Thirteen modern LNG carriers per company description
