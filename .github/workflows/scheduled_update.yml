@@ -38,6 +38,12 @@ jobs:
       - name: Refresh free/live data sources
         env:
           LOG_LEVEL: INFO
+          # Free, no-cost registered keys (added August 2026) -- register at
+          # https://fred.stlouisfed.org/docs/api/api_key.html and https://www.eia.gov/opendata/,
+          # then add both as repository secrets (Settings -> Secrets and variables -> Actions).
+          # Blank/missing is safe: the adapters log a warning and skip themselves.
+          FRED_API_KEY: ${{ secrets.FRED_API_KEY }}
+          EIA_API_KEY: ${{ secrets.EIA_API_KEY }}
           # Add licensed-source API keys here as repository secrets once purchased, e.g.:
           # CLARKSONS_API_KEY: ${{ secrets.CLARKSONS_API_KEY }}
         run: python scripts/update_data.py

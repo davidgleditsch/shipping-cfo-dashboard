@@ -5,12 +5,15 @@ These are documented per the project instruction to "make reasonable assumptions
 1. **Watchlist tickers** — the ten companies are tracked using their primary Oslo Børs (or NYSE where
    dual-listed) tickers, verified against public sources in July 2026. If a ticker fails to resolve,
    the company is shown with a "price data unavailable" badge rather than removed, so the watchlist
-   stays complete even when one feed breaks. Two names in the original brief's watchlist are no
-   longer publicly listed as of July 2026: **Golden Ocean** was acquired by CMB.TECH and delisted
-   from Oslo Børs/Nasdaq in August 2025, and **Cool Company** was taken private via merger with EPS
-   Ventures and delisted from NYSE/Euronext Oslo in January 2026. Both are kept on the watchlist per
-   the project brief, but the app labels them "no longer publicly listed" instead of silently showing
-   blank price data — this is itself a CFO-relevant consolidation data point, not a data error.
+   stays complete even when one feed breaks. **Cool Company** is no longer publicly listed as of
+   January 2026 — taken private via merger with EPS Ventures, delisted from NYSE/Euronext Oslo — and
+   is kept on the watchlist per the project brief, with the app labeling it "no longer publicly
+   listed" instead of silently showing blank price data; this is itself a CFO-relevant consolidation
+   data point, not a data error. **Golden Ocean** was removed from the watchlist on 2026-08-13 (per
+   explicit instruction) after being acquired by and delisted into **CMB.TECH** (merger completed 20
+   August 2025) and replaced on the list by CMB.TECH itself, ticker `CMBTO.OL` (its Euronext Oslo Børs
+   line; CMB.TECH is triple-listed, also trading as `CMBT` on Euronext Brussels and NYSE). CMB.TECH's
+   fleet is diversified beyond dry bulk, so its company financials reflect the whole group.
    Flex LNG's ticker is `FLNG` (its NYSE line, in USD) rather than `FLNG.OL`, matching Yahoo Finance's
    canonical listing for that stock.
 2. **Currency** — share prices are shown in the currency Yahoo Finance reports (typically NOK for

@@ -21,7 +21,7 @@ conn = get_conn()
 
 st.title("Listed Companies")
 st.caption("Watchlist: Wallenius Wilhelmsen, Hoegh Autoliners, MPC Container Ships, Hafnia, Odfjell, "
-           "BW LPG, Golden Ocean, Flex LNG, Klaveness Combination Carriers, Cool Company.")
+           "BW LPG, CMB.TECH (replaces Golden Ocean), Flex LNG, Klaveness Combination Carriers, Cool Company.")
 
 fx = get_latest_fx_rate(conn, "USDNOK")
 if fx:
@@ -70,9 +70,7 @@ fin_cols = st.columns(4)
 for i, (metric_key, data) in enumerate(view.financials.items()):
     with fin_cols[i % 4]:
         val = f"{fmt_number(data['value'])} {data['unit'] or ''}" if data["value"] is not None else "Not available"
-        st.metric(data["label"], val, help=f"Period: {data.get('period') or 'n/a'}")
-        if data.get("period"):
-            st.caption(f"Period: {data['period']}")
+        st.metric(data["label"], val)
         render_source_caption(data["source_meta"])
         st.markdown("&nbsp;")
 

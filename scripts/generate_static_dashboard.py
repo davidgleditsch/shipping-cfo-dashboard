@@ -32,6 +32,7 @@ from src.pages_logic.executive_brief import (
 from src.pages_logic.fleet_fundamentals import get_all_segment_fundamentals
 from src.pages_logic.freight_markets import get_all_segment_views
 from src.pages_logic.listed_companies import get_company_views, get_latest_fx_rate
+from src.pages_logic.macro_context import get_chokepoint_views, get_macro_indicator_views
 from src.pages_logic.news_events import get_news
 
 CSS = """
@@ -48,17 +49,11 @@ h2 { font-size: 1.2rem; margin: 36px 0 12px 0; padding-bottom: 6px; border-botto
 h3 { font-size: 0.95rem; margin: 0 0 6px 0; }
 .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
-.grid-wide { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
 .metric-value { font-size: 1.35rem; font-weight: 700; margin: 4px 0; }
 .metric-label { font-size: 0.8rem; color: var(--muted); }
-.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.68rem; font-weight: 700;
-         text-transform: uppercase; letter-spacing: 0.02em; white-space: nowrap; }
-.fin-table td { vertical-align: top; }
-.fin-table .fin-metric { width: 34%; font-weight: 600; }
-.fin-table .fin-value { width: 30%; }
-.fin-table .fin-period { width: 16%; color: var(--muted); font-size: 0.8rem; white-space: nowrap; }
-.fin-table .fin-status { width: 20%; text-align: right; }
+.badge { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700;
+         text-transform: uppercase; letter-spacing: 0.02em; }
 .badge-live { background: color-mix(in srgb, var(--live) 15%, white); color: var(--live); }
 .badge-delayed { background: color-mix(in srgb, var(--delayed) 15%, white); color: var(--delayed); }
 .badge-manual { background: color-mix(in srgb, var(--manual) 15%, white); color: var(--manual); }
@@ -110,27 +105,6 @@ def fmt_num(v, decimals=1) -> str:
         return f"{v:,.{decimals}f}"
     except (TypeError, ValueError):
         return "—"
-
-
-def fmt_financial(v, unit: str | None) -> str:
-    """Format a company-financials value with unit-appropriate precision.
-
-    Vessel counts are whole numbers ("51 vessels", not "51.0 vessels"). Per-share figures need up
-    to 4 decimals or a NOK 0.2877 dividend silently rounds to "0.3" -- misleading for a CFO number.
-    Trailing zeros are trimmed so a flat USD 0.75 doesn't render as "0.7500".
-    """
-    if v is None:
-        return "—"
-    if unit == "vessels":
-        return f"{v:,.0f}"
-    if unit == "usd_per_share":
-        s = f"{v:.4f}".rstrip("0")
-        if s.endswith("."):
-            s += "00"
-        elif len(s.split(".")[-1]) < 2:
-            s += "0" * (2 - len(s.split(".")[-1]))
-        return s
-    return f"{v:,.1f}"
 
 
 def fmt_pct(v, decimals=1) -> str:
@@ -245,25 +219,47 @@ def render_companies_section(conn) -> str:
 
         fin_rows = []
         for metric_key, data in v.financials.items():
-            meta = data["source_meta"]
-            val = f"{fmt_financial(data['value'], data['unit'])} {esc(data['unit'] or '')}" if data["value"] is not None else "Not available"
-            period = esc(data.get("period")) if data.get("period") else "—"
-            date_str = meta.observation_date.isoformat() if meta.observation_date else "n/a"
-            title = f"{esc(meta.source)} · observed {esc(date_str)} · {esc(meta.frequency)}"
-            fin_rows.append(
-                f'<tr title="{title}"><td class="fin-metric">{esc(data["label"])}</td>'
-                f'<td class="fin-value">{val}</td><td class="fin-period">{period}</td>'
-                f'<td class="fin-status">{badge(meta.status)}</td></tr>'
-            )
-        fin_table = (f'<table class="fin-table"><tr><th>Metric</th><th>Value</th><th>Period</th>'
-                     f'<th style="text-align:right;">Status</th></tr>' + "".join(fin_rows) + "</table>")
+            val = f"{fmt_num(data['value'])} {esc(data['unit'] or '')}" if data["value"] is not None else "Not available"
+            fin_rows.append(f"<tr><td>{esc(data['label'])}</td><td>{val}</td><td>{badge(data['source_meta'].status)}</td></tr>")
+        fin_table = "<table>" + "".join(fin_rows) + "</table>"
 
         cards.append(
             f'<div class="card"><h3>{esc(v.name)} ({esc(v.ticker)}) — {esc(v.segment)}</h3>'
             f'{price_block}<div style="margin-top:10px;">{fin_table}</div>'
             f'<p class="src">NAV: {esc(v.nav_status)}</p></div>'
         )
-    return fx_note + f'<div class="grid-wide">{"".join(cards)}</div>'
+    return fx_note + f'<div class="grid">{"".join(cards)}</div>'
+
+
+def render_macro_section(conn) -> str:
+    choke_views = get_chokepoint_views(conn)
+    macro_views = get_macro_indicator_views(conn)
+
+    if choke_views:
+        cards = []
+        for label, v in choke_views.items():
+            short_label = esc(label.replace(" — daily vessel transits", ""))
+            cards.append(
+                f'<div class="card"><h3>{short_label}</h3>'
+                f'<div class="metric-value">{fmt_num(v.latest_value, 0)} {esc(v.latest_unit or "")}</div>'
+                f'<div class="metric-label">WoW {fmt_pct(v.wow_change_pct)}</div>{src_line(v.source_meta)}</div>'
+            )
+        choke_html = f'<div class="grid">{"".join(cards)}</div>'
+    else:
+        choke_html = ('<p class="section-note">Not available yet. No chokepoint data ingested -- '
+                      'run scripts/update_data.py or wait for the next scheduled GitHub Actions run.</p>')
+
+    macro_cards = []
+    for label, v in macro_views.items():
+        val = f"{fmt_num(v.latest_value)} {esc(v.latest_unit or '')}" if v.latest_value is not None else "Not available"
+        macro_cards.append(
+            f'<div class="card"><h3>{esc(label)}</h3><div class="metric-value" style="font-size:1.05rem;">{val}</div>'
+            f'{src_line(v.source_meta)}</div>'
+        )
+    macro_html = f'<div class="grid">{"".join(macro_cards)}</div>'
+
+    return (f'<h3>Chokepoint traffic (IMF PortWatch)</h3>{choke_html}'
+            f'<h3 style="margin-top:20px;">Macro benchmark rates</h3>{macro_html}')
 
 
 def render_news_section(conn) -> str:
@@ -336,6 +332,9 @@ def generate_html(conn) -> str:
 
   <h2>News and Events</h2>
   {render_news_section(conn)}
+
+  <h2>Macro & Chokepoints</h2>
+  {render_macro_section(conn)}
 
   <h2>CFO Monitor</h2>
   {render_cfo_monitor_section(conn)}

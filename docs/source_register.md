@@ -1,6 +1,6 @@
 # Source Register — Shipping CFO Intelligence
 
-Full row-by-row register (33 metrics, all 11 required fields) is in
+Full row-by-row register (39 metrics, all 11 required fields) is in
 [`docs/source_register.csv`](source_register.csv) — open it in Excel/Sheets to filter and sort.
 This document summarizes what it says and explains the reasoning behind each status.
 
@@ -18,6 +18,18 @@ paid input that has not been purchased.
 | SEC EDGAR | Filing alerts (6-K/20-F) for Hafnia, BW LPG, Flex LNG — the three SEC-registered names | As filed | Free |
 | SEC EDGAR XBRL company facts | Revenue and cash (annual, from 20-F), plus a *derived* net debt when both tags exist, for Hafnia, BW LPG, Flex LNG | Annual (20-F only — FPI 6-Ks aren't reliably XBRL-tagged) | Free |
 | Hellenic Shipping News + gCaptain RSS | General shipping headlines, auto-categorized | As published | Free |
+| IMF PortWatch (`Daily_Chokepoints_Data` ArcGIS FeatureServer) | Daily vessel-transit counts for 8 tracked chokepoints (Hormuz, Suez, Panama, Bab al-Mandab, Bosphorus, Malacca, Gibraltar, Dover) | Weekly (published Tuesdays; AIS-derived) | Free, no key |
+| FRED (Federal Reserve Bank of St. Louis) | SOFR reference rate — context for watchlist companies' cost of debt | Daily | Free, requires a no-cost registered key (`FRED_API_KEY`) |
+| EIA (U.S. Energy Information Administration) | Brent and WTI crude spot prices — demand-side context for tanker segments | Daily | Free, requires a no-cost registered key (`EIA_API_KEY`) |
+
+The last three were added August 2026 in response to a request for additional free, "fun but
+relevant" context data alongside the core Shipping CFO metrics. Field names for the IMF PortWatch
+ArcGIS layer could not be verified against a live response while writing the adapter (this sandbox
+has no route to `arcgis.com`); `src/adapters/imf_portwatch_adapter.py` is deliberately
+schema-tolerant (tries several plausible field names, logs a warning and returns no data rather
+than guessing) and should be checked against its first real GitHub Actions run. FRED and EIA both
+require a free registered API key — set `FRED_API_KEY` / `EIA_API_KEY` as GitHub Actions secrets;
+until then both degrade to "Not available" exactly like every other missing source.
 
 The first three were implemented in Step 2 as "the reliable free sources first." The SEC XBRL
 company-facts adapter (`src/adapters/sec_edgar_xbrl_adapter.py`) was added afterward to close part
@@ -76,10 +88,19 @@ would violate their terms of use, which this project will not do. Consolidated b
 - **OFAC sanctions RSS**: officially retired by the US Treasury on 31 January 2025. OFAC now
   offers only email notifications or the plain recent-actions webpage; no RSS/API replacement has
   been published. Kept manual rather than scraping the webpage.
+- **EU ETS carbon allowance (EUA) daily price** (investigated August 2026): the daily/spot price is
+  exchange-derived (ICE futures, EEX auctions). Investing.com and Trading Economics both display a
+  free headline number on their websites, but neither offers a genuinely free, no-key, documented
+  API for it — Trading Economics' API is a paid product, and building a scraper against either
+  site's web page would violate this project's own no-scraping rule. Databento offers real ICE EUA
+  futures data via API, but it is a paid feed. The EEA's EU ETS data viewer/EUTL downloads cover
+  emissions and allocations, not the daily traded price. Kept as a documented, explicitly-labeled
+  "Not available" gap on the new Macro & Chokepoints page (`src/pages_logic/macro_context.py`)
+  rather than silently dropped — see the Recommendation section below, which now also covers this.
 
-These three are the honest gaps in "free automation" — they are public-sector/exchange sources
-that *should* be reachable per the project's sourcing priorities (regulators, exchanges), but do
-not currently expose a free machine-readable feed. Worth re-checking periodically.
+These four are the honest gaps in "free automation" — they are public-sector/exchange/benchmark
+sources that *should* be reachable per the project's sourcing priorities, but do not currently
+expose a free machine-readable feed. Worth re-checking periodically.
 
 ## Recommendation: single most valuable paid subscription
 
@@ -95,3 +116,10 @@ and trade-tracking than on the fleet/orderbook/rate fundamentals this dashboard 
 A single Clarksons subscription would move roughly 14 of the 15 currently-manual, non-financial
 metrics from "Manual CSV" to "Implemented," leaving VesselsValue (for NAV) as the next-highest-value
 addition once Clarksons is in place.
+
+Note: the EUA carbon-price gap added above is unrelated to this recommendation — Clarksons does not
+cover exchange-traded carbon prices — and does not change it. Given it is one metric with low
+incremental CFO value versus the freight/fleet gaps, a monthly manual entry (from the free headline
+number on Trading Economics or Investing.com) is a proportionate interim fix; a paid feed (Trading
+Economics API, or Databento for ICE EUA futures) is only worth it if carbon-cost exposure becomes a
+standing agenda item.

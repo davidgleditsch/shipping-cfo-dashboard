@@ -25,11 +25,16 @@ gap list, cost and reliability assessment per metric.
 2. **Freight Markets** — dry bulk, container, crude tanker, product tanker, LNG, LPG, car carrier.
 3. **Fleet Fundamentals** — trading fleet, orderbook, deliveries, scrapping, age profile per segment.
 4. **Listed Companies** — Wallenius Wilhelmsen, Höegh Autoliners, MPC Container Ships, Hafnia,
-   Odfjell, BW LPG, Golden Ocean, Flex LNG, Klaveness Combination Carriers, Cool Company.
+   Odfjell, BW LPG, CMB.TECH (replaces Golden Ocean, acquired/delisted August 2025), Flex LNG,
+   Klaveness Combination Carriers, Cool Company.
 5. **News and Events** — categorized shipping news from free public RSS feeds plus SEC filing alerts.
 6. **CFO Monitor** — structured warning signals (refinancing maturity, liquidity pressure, high LTV,
    capex commitments, contract coverage, interest expense, dividend sustainability, covenant risk,
    equity issuance risk, consolidation/M&A potential).
+7. **Macro & Chokepoints** (added August 2026) — maritime chokepoint vessel-transit traffic (IMF
+   PortWatch) and macro benchmark rates (SOFR via FRED; Brent/WTI via EIA), as context alongside the
+   segment and company pages. Includes an explicit "Not available" card for the EU ETS carbon
+   allowance (EUA) price — a documented gap, not a silent omission.
 
 ## Live/free data sources implemented
 
@@ -39,6 +44,9 @@ gap list, cost and reliability assessment per metric.
   BW LPG, Flex LNG), free, no key (requires a descriptive User-Agent header per SEC's fair-access
   policy).
 - **Public RSS** (Hellenic Shipping News, gCaptain) — general shipping headlines, auto-categorized.
+- **IMF PortWatch** — weekly, AIS-derived vessel-transit counts for 8 major chokepoints, free, no key.
+- **FRED** — SOFR reference rate, daily, free but requires a no-cost registered `FRED_API_KEY`.
+- **EIA** — Brent and WTI crude spot prices, daily, free but requires a no-cost registered `EIA_API_KEY`.
 
 Everything else (freight rate indices, fleet/orderbook/scrapping data, detailed company financials,
 vessel valuations, Oslo Børs-only company announcements) has no free, legal, machine-readable source
@@ -86,10 +94,11 @@ pip install -r requirements.txt
 pytest tests/ -v
 ```
 
-35 tests cover the DB layer (append-only history, dedup), the manual-CSV validator (including the
-Step 2 duplicate/unit/outlier/row-limit checks), the FX and SEC EDGAR adapters (mocked network,
-including failure paths), adapter categorization/sample-data tagging, and all page logic (freight
-views, fleet fundamentals, listed companies, CFO Monitor signals, news category counts).
+59 tests cover the DB layer (append-only history, dedup), the manual-CSV validator (including the
+Step 2 duplicate/unit/outlier/row-limit checks), the FX, SEC EDGAR, IMF PortWatch, FRED and EIA
+adapters (mocked network, including failure paths and missing-API-key paths), adapter
+categorization/sample-data tagging, and all page logic (freight views, fleet fundamentals, listed
+companies, CFO Monitor signals, news category counts, macro/chokepoint views).
 
 **Note on a local dev quirk**: if you edit `.py` files while a Python process has already imported
 them, stale `__pycache__/*.pyc` bytecode can occasionally be reused. If you see an error that doesn't
@@ -97,9 +106,10 @@ match your latest edit, delete the `__pycache__` directories under `src/` and `t
 
 ## Scheduled data updates
 
-`scripts/update_data.py` now refreshes all four free/live sources in one run: Yahoo Finance share
-prices, Frankfurter FX rates, SEC EDGAR filing alerts and public RSS news. It never raises — a
-source that is temporarily unreachable is logged and reported as "0 rows," not treated as fatal.
+`scripts/update_data.py` now refreshes all free/live sources in one run: Yahoo Finance share prices,
+Frankfurter FX rates, SEC EDGAR filing alerts, public RSS news, IMF PortWatch chokepoint transits,
+and FRED/EIA macro benchmark rates. It never raises — a source that is temporarily unreachable, or
+whose free API key isn't configured, is logged and reported as "0 rows," not treated as fatal.
 Manual sources are, by design, only refreshed by a human uploading a new CSV.
 
 `scripts/generate_static_dashboard.py [output.html]` renders a self-contained static HTML version of
@@ -130,9 +140,11 @@ manager. The DuckDB file is a single portable file — back it up like any other
 
 ## Environment variables
 
-See `.env.example`. `SHIPPING_DB_PATH` and `LOG_LEVEL` are used today. The licensed-source keys
-(`CLARKSONS_API_KEY`, `VESSELSVALUE_API_KEY`, `XENETA_API_KEY`, `SP_GLOBAL_API_KEY`) are placeholders
-for adapters to be built once those subscriptions exist (see `docs/source_register.md`).
+See `.env.example`. `SHIPPING_DB_PATH` and `LOG_LEVEL` are used today, as are `FRED_API_KEY` and
+`EIA_API_KEY` (both free, no-cost registration — see the Macro & Chokepoints page). The
+licensed-source keys (`CLARKSONS_API_KEY`, `VESSELSVALUE_API_KEY`, `XENETA_API_KEY`,
+`SP_GLOBAL_API_KEY`) are placeholders for adapters to be built once those subscriptions exist (see
+`docs/source_register.md`).
 
 ## What still requires a paid or manual source
 
@@ -152,6 +164,9 @@ for adapters to be built once those subscriptions exist (see `docs/source_regist
 - Several CFO Monitor signals (refinancing maturity, high LTV, capex commitments, interest-expense
   trend, covenant risk, equity issuance risk) require debt/covenant/capex data not yet in the manual
   financials template — shown as "Not available" with the reason, not guessed.
+- EU ETS carbon allowance (EUA) daily price — investigated August 2026, no free no-key API found
+  (exchange-derived via ICE/EEX); shown as an explicit gap on the Macro & Chokepoints page rather
+  than a scraped or fabricated number.
 
 Full detail, preferred/backup source, cost and reliability notes for every metric are in
 `docs/source_register.md` and `docs/source_register.csv`.

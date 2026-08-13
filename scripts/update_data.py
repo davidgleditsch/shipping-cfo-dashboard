@@ -16,7 +16,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from src.adapters.eia_adapter import EIASpotPriceAdapter
+from src.adapters.fred_adapter import FREDRateAdapter
 from src.adapters.fx_adapter import FXRateAdapter
+from src.adapters.imf_portwatch_adapter import IMFPortWatchAdapter
 from src.adapters.news_rss_adapter import NewsRSSAdapter
 from src.adapters.sec_edgar_adapter import SECEdgarFilingsAdapter
 from src.adapters.sec_edgar_xbrl_adapter import SECEdgarXBRLFinancialsAdapter
@@ -59,6 +62,12 @@ def main() -> int:
                             SECEdgarXBRLFinancialsAdapter().fetch, conn)
     total_inserted += _run("Public RSS (shipping news)", "news_events",
                             NewsRSSAdapter().fetch, conn)
+    total_inserted += _run("IMF PortWatch (chokepoint transits)", "market_data_daily",
+                            IMFPortWatchAdapter().fetch, conn)
+    total_inserted += _run("FRED (reference interest rates)", "market_data_daily",
+                            FREDRateAdapter().fetch, conn)
+    total_inserted += _run("EIA (Brent/WTI spot prices)", "market_data_daily",
+                            EIASpotPriceAdapter().fetch, conn)
 
     log.info("Scheduled update complete. Total new rows: %d", total_inserted)
     print(f"TOTAL new rows across all free sources: {total_inserted}")

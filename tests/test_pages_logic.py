@@ -45,7 +45,7 @@ def test_listed_companies_views_cover_full_watchlist(conn):
 
 
 def test_cfo_signals_include_all_ten_categories(conn):
-    signals = get_company_signals(conn, "Golden Ocean")
+    signals = get_company_signals(conn, "CMB.TECH")
     assert len(signals) == 10
     ids = {s.id for s in signals}
     assert "refinancing_maturity" in ids
@@ -54,15 +54,15 @@ def test_cfo_signals_include_all_ten_categories(conn):
 
 def test_cfo_signal_liquidity_alert_when_low_cash(conn):
     df = pd.DataFrame([
-        {"company": "Golden Ocean", "metric": "cash", "period": "Q2 2026", "value": 1.0,
+        {"company": "CMB.TECH", "metric": "cash", "period": "Q2 2026", "value": 1.0,
          "unit": "usd_million", "observation_date": "2026-07-01", "source": "Filing",
          "frequency": "quarterly", "status": "manual", "license_note": ""},
-        {"company": "Golden Ocean", "metric": "net_debt", "period": "Q2 2026", "value": 500.0,
+        {"company": "CMB.TECH", "metric": "net_debt", "period": "Q2 2026", "value": 500.0,
          "unit": "usd_million", "observation_date": "2026-07-01", "source": "Filing",
          "frequency": "quarterly", "status": "manual", "license_note": ""},
     ])
     upsert_dataframe(conn, "company_financials", df)
-    signals = get_company_signals(conn, "Golden Ocean")
+    signals = get_company_signals(conn, "CMB.TECH")
     liquidity = next(s for s in signals if s.id == "liquidity_pressure")
     assert liquidity.level == SignalLevel.ALERT
 
