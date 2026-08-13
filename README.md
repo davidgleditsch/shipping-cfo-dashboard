@@ -26,7 +26,9 @@ gap list, cost and reliability assessment per metric.
 3. **Fleet Fundamentals** — trading fleet, orderbook, deliveries, scrapping, age profile per segment.
 4. **Listed Companies** — Wallenius Wilhelmsen, Höegh Autoliners, MPC Container Ships, Hafnia,
    Odfjell, BW LPG, CMB.TECH (replaces Golden Ocean, acquired/delisted August 2025), Flex LNG,
-   Klaveness Combination Carriers, Cool Company.
+   Klaveness Combination Carriers, Frontline, Okeanis Eco Tankers. (Cool Company was removed from
+   the watchlist 2026-08-13 -- delisted January 2026 with no successor entity to swap in, unlike
+   Golden Ocean/CMB.TECH.)
 5. **News and Events** — categorized shipping news from free public RSS feeds plus SEC filing alerts.
 6. **CFO Monitor** — structured warning signals (refinancing maturity, liquidity pressure, high LTV,
    capex commitments, contract coverage, interest expense, dividend sustainability, covenant risk,
@@ -40,9 +42,9 @@ gap list, cost and reliability assessment per metric.
 
 - **Yahoo Finance** (`yfinance`) — daily, ~15-20 min delayed share prices for the watchlist.
 - **Frankfurter (ECB reference rates)** — USD/NOK, USD/EUR FX, free, no key.
-- **SEC EDGAR** — Form 6-K/20-F filing alerts for the three SEC-registered watchlist names (Hafnia,
-  BW LPG, Flex LNG), free, no key (requires a descriptive User-Agent header per SEC's fair-access
-  policy).
+- **SEC EDGAR** — Form 6-K/20-F filing alerts for the five SEC-registered watchlist names (Hafnia,
+  BW LPG, Flex LNG, Frontline, Okeanis Eco Tankers), free, no key (requires a descriptive User-Agent
+  header per SEC's fair-access policy).
 - **Public RSS** (Hellenic Shipping News, gCaptain) — general shipping headlines, auto-categorized.
 - **IMF PortWatch** — weekly, AIS-derived vessel-transit counts for 8 major chokepoints, free, no key.
 - **FRED** — SOFR reference rate, daily, free but requires a no-cost registered `FRED_API_KEY`.
@@ -94,7 +96,7 @@ pip install -r requirements.txt
 pytest tests/ -v
 ```
 
-59 tests cover the DB layer (append-only history, dedup), the manual-CSV validator (including the
+62 tests cover the DB layer (append-only history, dedup), the manual-CSV validator (including the
 Step 2 duplicate/unit/outlier/row-limit checks), the FX, SEC EDGAR, IMF PortWatch, FRED and EIA
 adapters (mocked network, including failure paths and missing-API-key paths), adapter
 categorization/sample-data tagging, and all page logic (freight views, fleet fundamentals, listed
@@ -115,7 +117,10 @@ Manual sources are, by design, only refreshed by a human uploading a new CSV.
 `scripts/generate_static_dashboard.py [output.html]` renders a self-contained static HTML version of
 every page's key figures, using the same `pages_logic` functions as the interactive Streamlit app (no
 `streamlit`/`plotly` dependency, so it's cheap to run anywhere). This is what produces David's daily
-HTML dashboard.
+HTML dashboard. As of August 2026 it writes **two** linked pages, not one: `[output.html]` (the main
+overview) and a `fleet_fundamentals.html` next to it in the same directory (Fleet Fundamentals moved
+to its own page since every metric there is currently manual-CSV-pending, and it was cluttering the
+main scroll). Both carry a small top nav bar linking to each other.
 
 Two ways to run these on a schedule:
 
@@ -154,9 +159,9 @@ licensed-source keys (`CLARKSONS_API_KEY`, `VESSELSVALUE_API_KEY`, `XENETA_API_K
   every segment — Clarksons / VesselsValue license required. Manual CSV upload only.
 - Company revenue, EBITDA, net debt, cash, dividend, fleet size, contract coverage, spot exposure —
   public in filings but not automated. Manual CSV upload from the filing (dividend filing *events*
-  are auto-alerted for the 3 SEC-registered names via SEC EDGAR).
-- Company announcements for the 7 Oslo Børs-only names — no confirmed free machine-readable feed
-  from Euronext Newsweb; manual/curated. (SEC EDGAR covers the 3 SEC-registered names automatically.)
+  are auto-alerted for the 5 SEC-registered names via SEC EDGAR).
+- Company announcements for the 6 Oslo Børs-only names — no confirmed free machine-readable feed
+  from Euronext Newsweb; manual/curated. (SEC EDGAR covers the 5 SEC-registered names automatically.)
 - Vessel valuations and therefore **estimated NAV / Price-to-NAV** — explicitly not calculated until
   vessel-value assumptions are sourced and documented (VesselsValue or broker valuations).
 - IMO and OFAC regulatory/sanctions feeds — investigated; no working free RSS/API found (OFAC retired

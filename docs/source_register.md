@@ -13,10 +13,10 @@ paid input that has not been purchased.
 
 | Source | What it provides | Frequency | Cost |
 |---|---|---|---|
-| Yahoo Finance (`yfinance`) | Share price, volume for all 10 watchlist tickers | Daily, 15-20 min delayed | Free |
+| Yahoo Finance (`yfinance`) | Share price, volume for all 11 watchlist tickers | Daily, 15-20 min delayed | Free |
 | Frankfurter (ECB reference rates) | USD/NOK, USD/EUR FX rates | Daily | Free |
-| SEC EDGAR | Filing alerts (6-K/20-F) for Hafnia, BW LPG, Flex LNG — the three SEC-registered names | As filed | Free |
-| SEC EDGAR XBRL company facts | Revenue and cash (annual, from 20-F), plus a *derived* net debt when both tags exist, for Hafnia, BW LPG, Flex LNG | Annual (20-F only — FPI 6-Ks aren't reliably XBRL-tagged) | Free |
+| SEC EDGAR | Filing alerts (6-K/20-F) for Hafnia, BW LPG, Flex LNG, Frontline, Okeanis Eco Tankers — the five SEC-registered names | As filed | Free |
+| SEC EDGAR XBRL company facts | Revenue and cash (annual, from 20-F), plus a *derived* net debt when both tags exist, for Hafnia, BW LPG, Flex LNG, Frontline, Okeanis Eco Tankers | Annual (20-F only — FPI 6-Ks aren't reliably XBRL-tagged) | Free |
 | Hellenic Shipping News + gCaptain RSS | General shipping headlines, auto-categorized | As published | Free |
 | IMF PortWatch (`Daily_Chokepoints_Data` ArcGIS FeatureServer) | Daily vessel-transit counts for 8 tracked chokepoints (Hormuz, Suez, Panama, Bab al-Mandab, Bosphorus, Malacca, Gibraltar, Dover) | Weekly (published Tuesdays; AIS-derived) | Free, no key |
 | FRED (Federal Reserve Bank of St. Louis) | SOFR reference rate — context for watchlist companies' cost of debt | Daily | Free, requires a no-cost registered key (`FRED_API_KEY`) |
@@ -78,7 +78,7 @@ would violate their terms of use, which this project will not do. Consolidated b
 
 ## Investigated but not implemented (documented, not silently dropped)
 
-- **Euronext Oslo Børs Newsweb** (company announcements for the 7 Oslo Børs-only names): the
+- **Euronext Oslo Børs Newsweb** (company announcements for the 6 Oslo Børs-only names): the
   public site (newsweb.oslobors.no) is free to browse, but it is a JavaScript application with no
   confirmed free RSS/JSON feed as of July 2026; Euronext's documented API/data products for
   regulated announcements are paid. Kept as manual/curated rather than building a scraper against

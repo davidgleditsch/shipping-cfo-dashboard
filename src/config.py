@@ -30,11 +30,11 @@ SP_GLOBAL_API_KEY = os.environ.get("SP_GLOBAL_API_KEY", "")
 FRED_API_KEY = os.environ.get("FRED_API_KEY", "")
 EIA_API_KEY = os.environ.get("EIA_API_KEY", "")
 
-# Listed company watchlist, as specified in the project brief. Tickers verified against public
-# sources in July 2026 (see docs/assumptions.md, item 1). One name in the original brief's
-# watchlist has since been delisted and is replaced here by its acquirer per instructions received
-# 2026-08-13; one other remains delisted and kept on the list -- both flagged so the app never
-# silently shows a blank chart for a stock that no longer trades under its original name.
+# Listed company watchlist, as specified in the project brief and extended per instructions
+# received 2026-08-13. Tickers verified against public sources (see docs/assumptions.md, item 1).
+# Golden Ocean was removed and replaced by its acquirer CMB.TECH; Cool Company was removed outright
+# (delisted, no replacement -- unlike Golden Ocean/CMB.TECH there's no successor entity to swap in);
+# Frontline and Okeanis Eco Tankers were added as two more listed crude tanker names.
 WATCHLIST = [
     {"name": "Wallenius Wilhelmsen", "segment": "Car carrier", "ticker": "WAWI.OL",
      "listed": True, "status_note": ""},
@@ -64,11 +64,17 @@ WATCHLIST = [
      "listed": True, "status_note": "Dual-listed NYSE/Oslo Bors; ticker here is the NYSE line (USD)."},
     {"name": "Klaveness Combination Carriers", "segment": "Dry bulk / combination carrier", "ticker": "KCC.OL",
      "listed": True, "status_note": ""},
-    {"name": "Cool Company", "segment": "LNG", "ticker": "CLCO.OL",
-     "listed": False,
-     "status_note": "Delisted from NYSE/Euronext Oslo — taken private via merger with EPS Ventures, "
-                     "completed January 2026. Kept on the watchlist per project brief; shown as a "
-                     "completed consolidation, not a live equity."},
+    {"name": "Frontline", "segment": "Crude tanker", "ticker": "FRO.OL",
+     "listed": True,
+     "status_note": "Added to the watchlist 2026-08-13. Dual-listed NYSE and Oslo Bors, both under "
+                     "ticker FRO; ticker used here (FRO.OL) is the Oslo line for NOK-basis consistency "
+                     "with the rest of the Oslo-listed names. SEC-registered (CIK 913290, added to "
+                     "SEC_EDGAR_CIKS)."},
+    {"name": "Okeanis Eco Tankers", "segment": "Crude tanker", "ticker": "OET.OL",
+     "listed": True,
+     "status_note": "Added to the watchlist 2026-08-13. Dual-listed NYSE (ticker ECO) and Oslo Bors "
+                     "(ticker OET, used here for NOK-basis consistency). SEC-registered (CIK 1964954, "
+                     "added to SEC_EDGAR_CIKS)."},
 ]
 
 # Maritime chokepoints tracked via IMF PortWatch (src/adapters/imf_portwatch_adapter.py). Names

@@ -6,8 +6,9 @@ financial figures inside it. This adapter reads the actual tagged numbers.
 
 Scope, and why it is narrower than the full `company_financials` schema:
 
-- Only the three SEC-registered watchlist names (Hafnia, BW LPG, Flex LNG) file with the SEC at
-  all -- the seven Oslo Bors-only names have no CIK and are correctly skipped (see
+- Only the five SEC-registered watchlist names (Hafnia, BW LPG, Flex LNG, Frontline, Okeanis Eco
+  Tankers) file with the SEC at all -- the six Oslo Bors-only names have no CIK and are correctly
+  skipped (see
   `SEC_EDGAR_CIKS` in `sec_edgar_adapter.py`, reused here rather than duplicated).
 - Only concepts that these foreign private issuers reliably tag in inline XBRL are extracted:
   revenue, cash, and (only when both are present for the same period) a *derived* net debt.

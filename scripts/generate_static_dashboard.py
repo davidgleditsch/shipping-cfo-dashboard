@@ -49,6 +49,7 @@ h2 { font-size: 1.2rem; margin: 36px 0 12px 0; padding-bottom: 6px; border-botto
 h3 { font-size: 0.95rem; margin: 0 0 6px 0; }
 .meta { color: var(--muted); font-size: 0.85rem; margin-bottom: 24px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+.grid-companies { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; }
 .metric-value { font-size: 1.35rem; font-weight: 700; margin: 4px 0; }
 .metric-label { font-size: 0.8rem; color: var(--muted); }
@@ -74,7 +75,51 @@ th { color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: 
 .heat-bar { height: 16px; border-radius: 4px; }
 .section-note { color: var(--muted); font-size: 0.85rem; margin-bottom: 10px; }
 .footer { color: var(--muted); font-size: 0.78rem; margin-top: 48px; border-top: 1px solid var(--line); padding-top: 12px; }
+.nav { margin: 4px 0 24px 0; font-size: 0.85rem; }
+.nav a { color: var(--manual); text-decoration: none; margin-right: 18px; }
+.nav a.active { color: var(--ink); font-weight: 700; text-decoration: underline; }
+.fin-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline;
+           gap: 4px 10px; padding: 5px 0; border-bottom: 1px solid var(--line); font-size: 0.85rem; }
+.fin-label { color: var(--muted); flex-shrink: 0; }
+.fin-value { font-weight: 600; text-align: right; word-break: break-word; }
 """
+
+NAV_LINKS = [
+    ("index.html", "Oversikt"),
+    ("fleet_fundamentals.html", "Fleet Fundamentals"),
+]
+
+
+def page_shell(body: str, active_href: str) -> str:
+    """Shared head/nav/footer wrapper so index.html and fleet_fundamentals.html look consistent."""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M")
+    nav_parts = []
+    for href, label in NAV_LINKS:
+        cls_attr = ' class="active"' if href == active_href else ""
+        nav_parts.append(f'<a href="{href}"{cls_attr}>{esc(label)}</a>')
+    nav_html = "".join(nav_parts)
+    return f"""<!DOCTYPE html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shipping CFO Intelligence — Executive Dashboard</title>
+<style>{CSS}</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Shipping CFO Intelligence</h1>
+  <div class="meta">Generert {esc(now)} &middot; Statisk øyeblikksbilde — ikke interaktiv.
+    Alle tall er merket Live / Delayed / Manuelt / Sample / Not available med kilde og observasjonsdato.</div>
+  <div class="nav">{nav_html}</div>
+  {body}
+  <div class="footer">
+    Shipping CFO Intelligence &middot; statisk dashboard generert av scripts/generate_static_dashboard.py.
+    Ingen data er fabrikkert eller interpolert — se docs/source_register.md for fullstendig kildeoversikt.
+  </div>
+</div>
+</body>
+</html>"""
 
 _BADGE_CLASS = {
     DataStatus.LIVE: "badge-live", DataStatus.DELAYED: "badge-delayed",
@@ -220,15 +265,20 @@ def render_companies_section(conn) -> str:
         fin_rows = []
         for metric_key, data in v.financials.items():
             val = f"{fmt_num(data['value'])} {esc(data['unit'] or '')}" if data["value"] is not None else "Not available"
-            fin_rows.append(f"<tr><td>{esc(data['label'])}</td><td>{val}</td><td>{badge(data['source_meta'].status)}</td></tr>")
-        fin_table = "<table>" + "".join(fin_rows) + "</table>"
+            fin_rows.append(
+                f'<div class="fin-row"><span class="fin-label">{esc(data["label"])}</span>'
+                f'<span class="fin-value">{val}</span>{badge(data["source_meta"].status)}</div>'
+            )
+        fin_block = "".join(fin_rows)
 
         cards.append(
             f'<div class="card"><h3>{esc(v.name)} ({esc(v.ticker)}) — {esc(v.segment)}</h3>'
-            f'{price_block}<div style="margin-top:10px;">{fin_table}</div>'
+            f'{price_block}<div style="margin-top:10px;">{fin_block}</div>'
             f'<p class="src">NAV: {esc(v.nav_status)}</p></div>'
         )
-    return fx_note + f'<div class="grid">{"".join(cards)}</div>'
+    # Cards are wider here than the default grid track (financial rows need room to breathe) --
+    # a dedicated class avoids affecting the freight/fleet/macro grids elsewhere on the page.
+    return fx_note + f'<div class="grid grid-companies">{"".join(cards)}</div>'
 
 
 def render_macro_section(conn) -> str:
@@ -295,23 +345,8 @@ def render_cfo_monitor_section(conn) -> str:
     return "".join(blocks)
 
 
-def generate_html(conn) -> str:
-    now = datetime.now().strftime("%Y-%m-%d %H:%M")
-    return f"""<!DOCTYPE html>
-<html lang="no">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shipping CFO Intelligence — Executive Dashboard</title>
-<style>{CSS}</style>
-</head>
-<body>
-<div class="wrap">
-  <h1>Shipping CFO Intelligence</h1>
-  <div class="meta">Generert {esc(now)} &middot; Statisk øyeblikksbilde — ikke interaktiv.
-    Alle tall er merket Live / Delayed / Manuelt / Sample / Not available med kilde og observasjonsdato.</div>
-
-  <h2>Executive Brief</h2>
+def generate_index_html(conn) -> str:
+    body = f"""  <h2>Executive Brief</h2>
   <h3>Fem ting som betyr noe</h3>
   {render_top_news(conn)}
   <h3 style="margin-top:20px;">Segment-heatmap (WoW)</h3>
@@ -325,7 +360,10 @@ def generate_html(conn) -> str:
   {render_freight_section(conn)}
 
   <h2>Fleet Fundamentals</h2>
-  {render_fleet_section(conn)}
+  <p class="section-note">Trading fleet, orderbook, expected deliveries, scrapping and fleet age per
+    segment — moved to its own page since every metric here is still manual-CSV-pending (no free
+    automated source exists; see docs/source_register.md).
+    <a href="fleet_fundamentals.html">Åpne Fleet Fundamentals →</a></p>
 
   <h2>Listed Companies</h2>
   {render_companies_section(conn)}
@@ -338,22 +376,35 @@ def generate_html(conn) -> str:
 
   <h2>CFO Monitor</h2>
   {render_cfo_monitor_section(conn)}
+"""
+    return page_shell(body, active_href="index.html")
 
-  <div class="footer">
-    Shipping CFO Intelligence &middot; statisk dashboard generert av scripts/generate_static_dashboard.py.
-    Ingen data er fabrikkert eller interpolert — se docs/source_register.md for fullstendig kildeoversikt.
-  </div>
-</div>
-</body>
-</html>"""
+
+def generate_fleet_html(conn) -> str:
+    body = f"""  <h2>Fleet Fundamentals</h2>
+  <p class="section-note">Trading fleet, orderbook, orderbook as % of fleet, expected deliveries,
+    scrapping and average fleet age per segment. Every metric below requires a manual CSV upload
+    (Clarksons/VesselsValue-sourced) or a future licensed adapter — none has a free, legal,
+    machine-readable source today. See docs/source_register.md for the full gap list.
+    <a href="index.html">&larr; Tilbake til oversikten</a></p>
+  {render_fleet_section(conn)}
+"""
+    return page_shell(body, active_href="fleet_fundamentals.html")
 
 
 def main() -> int:
     out_path = Path(sys.argv[1]) if len(sys.argv) > 1 else Path("dashboard.html")
+    fleet_path = out_path.parent / "fleet_fundamentals.html"
     conn = get_connection()
-    html_content = generate_html(conn)
-    out_path.write_text(html_content, encoding="utf-8")
-    print(f"Wrote {out_path} ({len(html_content):,} bytes)")
+
+    index_html = generate_index_html(conn)
+    out_path.write_text(index_html, encoding="utf-8")
+    print(f"Wrote {out_path} ({len(index_html):,} bytes)")
+
+    fleet_html = generate_fleet_html(conn)
+    fleet_path.write_text(fleet_html, encoding="utf-8")
+    print(f"Wrote {fleet_path} ({len(fleet_html):,} bytes)")
+
     conn.close()
     return 0
 

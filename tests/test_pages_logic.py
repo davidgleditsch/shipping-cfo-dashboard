@@ -40,7 +40,7 @@ def test_fleet_fundamentals_unavailable_by_default(conn):
 
 def test_listed_companies_views_cover_full_watchlist(conn):
     views = get_company_views(conn)
-    assert len(views) == 10
+    assert len(views) == 11
     assert all(v.nav_status.startswith("Requires vessel-value assumptions") for v in views)
 
 

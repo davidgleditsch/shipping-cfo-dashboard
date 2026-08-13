@@ -24,12 +24,16 @@ from src.utils.logging_config import get_logger
 
 log = get_logger("adapters.sec_edgar")
 
-# Confirmed CIKs for watchlist companies with SEC registration (verified July 2026). Companies not
-# listed here are Oslo Bors-only with no SEC filings to fetch -- intentionally excluded, not missed.
+# Confirmed CIKs for watchlist companies with SEC registration (verified July 2026; Frontline and
+# Okeanis Eco Tankers added 2026-08-13, CIKs confirmed directly from sec.gov/Archives/edgar/data/
+# filing URLs). Companies not listed here are Oslo Bors-only with no SEC filings to fetch --
+# intentionally excluded, not missed.
 SEC_EDGAR_CIKS = {
     "Hafnia": "1815779",
     "BW LPG": "1649313",
     "Flex LNG": "1772253",
+    "Frontline": "913290",
+    "Okeanis Eco Tankers": "1964954",
 }
 
 _BASE_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik:0>10}.json"

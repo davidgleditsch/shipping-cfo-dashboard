@@ -21,7 +21,8 @@ conn = get_conn()
 
 st.title("Listed Companies")
 st.caption("Watchlist: Wallenius Wilhelmsen, Hoegh Autoliners, MPC Container Ships, Hafnia, Odfjell, "
-           "BW LPG, CMB.TECH (replaces Golden Ocean), Flex LNG, Klaveness Combination Carriers, Cool Company.")
+           "BW LPG, CMB.TECH (replaces Golden Ocean), Flex LNG, Klaveness Combination Carriers, "
+           "Frontline, Okeanis Eco Tankers.")
 
 fx = get_latest_fx_rate(conn, "USDNOK")
 if fx:
