@@ -20,6 +20,7 @@ the exact facet values available)
 from __future__ import annotations
 
 import json
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date
@@ -73,6 +74,17 @@ class EIASpotPriceAdapter(SourceAdapter):
             req = urllib.request.Request(url, headers={"User-Agent": "ShippingCFOIntelligence/1.0"})
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            # EIA returns 403 for auth failures (missing/invalid api_key), not just for genuine
+            # permission issues -- read the body, since it usually names the exact problem (e.g.
+            # "invalid api_key") instead of leaving us with a bare status code to guess from.
+            try:
+                body = exc.read().decode("utf-8", errors="replace")[:500]
+            except Exception:
+                body = "<no response body>"
+            log.warning("EIA fetch failed for product %s: HTTP %s %s -- response body: %s",
+                        product_code, exc.code, exc.reason, body)
+            return None
         except (OSError, ValueError) as exc:
             log.warning("EIA fetch failed for product %s: %s", product_code, exc)
             return None

@@ -64,3 +64,25 @@ def test_handles_no_matching_chokepoints():
     with patch("src.adapters.imf_portwatch_adapter.urllib.request.urlopen", return_value=_fake_response(payload)):
         df = IMFPortWatchAdapter(chokepoints=("Suez Canal",)).fetch()
     assert df.empty
+
+
+def test_matches_chokepoint_by_keyword_despite_different_exact_spelling():
+    # Real dataset labels may not exactly match our config.CHOKEPOINTS spelling -- keyword
+    # matching (see _CHOKEPOINT_KEYWORDS) should still find it.
+    payload = {"features": [_feature("Bab-el-Mandeb Strait", "2026-08-08", 12)]}
+    with patch("src.adapters.imf_portwatch_adapter.urllib.request.urlopen", return_value=_fake_response(payload)):
+        df = IMFPortWatchAdapter(chokepoints=("Bab al-Mandab",)).fetch()
+    assert len(df) == 1
+    assert "Bab al-Mandab" in df.iloc[0]["metric"]
+
+
+def test_requests_server_side_ordering_by_detected_date_field():
+    payload = {"features": [_feature("Suez Canal", "2026-08-08", 40)]}
+    with patch("src.adapters.imf_portwatch_adapter.urllib.request.urlopen",
+               return_value=_fake_response(payload)) as mock_urlopen:
+        IMFPortWatchAdapter().fetch()
+    # Two calls: an unordered schema probe, then a request explicitly ordered by the date field
+    # found in the probe -- this is what fixes fetching an arbitrary early slice of history.
+    assert mock_urlopen.call_count == 2
+    second_call_url = mock_urlopen.call_args_list[1][0][0].full_url
+    assert "orderByFields=date+DESC" in second_call_url or "orderByFields=date%20DESC" in second_call_url

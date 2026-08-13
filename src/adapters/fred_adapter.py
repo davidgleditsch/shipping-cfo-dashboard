@@ -14,6 +14,7 @@ Docs: https://fred.stlouisfed.org/docs/api/fred/series_observations.html
 from __future__ import annotations
 
 import json
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date
@@ -62,6 +63,14 @@ class FREDRateAdapter(SourceAdapter):
             req = urllib.request.Request(url, headers={"User-Agent": "ShippingCFOIntelligence/1.0"})
             with urllib.request.urlopen(req, timeout=self.timeout) as resp:
                 payload = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as exc:
+            try:
+                body = exc.read().decode("utf-8", errors="replace")[:500]
+            except Exception:
+                body = "<no response body>"
+            log.warning("FRED fetch failed for series %s: HTTP %s %s -- response body: %s",
+                        series_id, exc.code, exc.reason, body)
+            return None
         except (OSError, ValueError) as exc:
             log.warning("FRED fetch failed for series %s: %s", series_id, exc)
             return None

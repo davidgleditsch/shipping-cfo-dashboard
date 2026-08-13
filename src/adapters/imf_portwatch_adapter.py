@@ -13,12 +13,18 @@ Docs: https://portwatch.imf.org/pages/data-and-methodology
 
 Field names for this ArcGIS layer could not be verified against a live response when this adapter
 was written -- this sandbox has no route to arcgis.com (see docs/source_register.md). The parser
-therefore does not assume one fixed schema: it searches each returned feature's attributes for one
-of several plausible field names for the chokepoint label, the observation date and the
-vessel-count metric, and logs a warning and returns an empty DataFrame (never a fabricated number)
-if none of the candidates match. The first real run of this adapter happens in GitHub Actions,
-which does have internet access -- check its logs and narrow the candidate lists below if the
-schema differs from what's assumed here.
+therefore does not assume one fixed schema: it probes a small unordered batch to detect field names,
+then issues a second, larger request explicitly ordered by the detected date field (descending) so
+a bounded page reliably contains the *most recent* observations rather than whatever slice the
+server's default (apparently insertion/OBJECTID) order happens to return. Confirmed against the
+2026-08-13 GitHub Actions run: the first version of this adapter (no server-side ordering) returned
+only a single chokepoint (Suez Canal) with an observation date of 2024-06-22 -- i.e. an arbitrary
+early slice of the dataset's full history, not the latest week. This version fixes that.
+
+Chokepoint name matching is keyword-based (see `_CHOKEPOINT_KEYWORDS` below) rather than exact- or
+substring-match against `config.CHOKEPOINTS`, because the dataset's exact label spelling (e.g.
+"Bab-el-Mandeb Strait" vs. our "Bab al-Mandab") was not confirmed before writing this either. Widen
+`_CHOKEPOINT_KEYWORDS` if a tracked chokepoint still doesn't appear after this fix.
 """
 from __future__ import annotations
 
@@ -51,6 +57,20 @@ _VALUE_FIELD_CANDIDATES = [
     "n_total", "vessels_total", "vessel_count_total", "n_ships", "total_vessels", "n_transits", "value",
 ]
 
+# Keyword(s) that identify each tracked chokepoint in whatever free-text label the dataset actually
+# uses (confirmed spelling varies -- e.g. IMF's own site uses both "Bab-el-Mandeb" and "Bab al-Mandab"
+# in different places). Matching is "any keyword is a case-insensitive substring of the raw label."
+_CHOKEPOINT_KEYWORDS = {
+    "Suez Canal": ("suez",),
+    "Panama Canal": ("panama",),
+    "Strait of Hormuz": ("hormuz",),
+    "Bab al-Mandab": ("mandab", "mandeb"),
+    "Bosphorus Strait": ("bosphorus", "bosporus"),
+    "Strait of Malacca": ("malacca",),
+    "Strait of Gibraltar": ("gibraltar",),
+    "Strait of Dover": ("dover",),
+}
+
 
 class IMFPortWatchAdapter(SourceAdapter):
     name = "IMF PortWatch (Daily Chokepoints Data)"
@@ -64,13 +84,8 @@ class IMFPortWatchAdapter(SourceAdapter):
         self.lookback_records = lookback_records
         self.timeout = timeout
 
-    def _fetch_raw(self) -> list[dict]:
-        params = {
-            "where": "1=1",
-            "outFields": "*",
-            "f": "json",
-            "resultRecordCount": str(self.lookback_records),
-        }
+    def _fetch_page(self, extra_params: dict) -> list[dict]:
+        params = {"where": "1=1", "outFields": "*", "f": "json", **extra_params}
         query = "&".join(f"{k}={urllib.parse.quote(str(v))}" for k, v in params.items())
         url = f"{FEATURE_SERVER_URL}?{query}"
         try:
@@ -84,8 +99,6 @@ class IMFPortWatchAdapter(SourceAdapter):
             log.warning("IMF PortWatch API returned an error payload: %s", payload.get("error"))
             return []
         features = payload.get("features", [])
-        if not features:
-            log.warning("IMF PortWatch response had no features (payload keys: %s)", list(payload.keys()))
         return [f.get("attributes", {}) for f in features if isinstance(f, dict)]
 
     @staticmethod
@@ -107,12 +120,25 @@ class IMFPortWatchAdapter(SourceAdapter):
         except (ValueError, OverflowError, OSError, TypeError):
             return None
 
+    @staticmethod
+    def _match_chokepoint(raw_name: str, tracked: tuple) -> Optional[str]:
+        raw_name_lower = raw_name.lower()
+        for cp, keywords in _CHOKEPOINT_KEYWORDS.items():
+            if cp not in tracked:
+                continue
+            if any(kw in raw_name_lower for kw in keywords):
+                return cp
+        return None
+
     def fetch(self) -> pd.DataFrame:
-        records = self._fetch_raw()
-        if not records:
+        # Phase 1: small, unordered probe purely to discover this layer's actual field names --
+        # cheap, and avoids guessing an orderByFields value the server might reject.
+        probe = self._fetch_page({"resultRecordCount": "10"})
+        if not probe:
+            log.warning("IMF PortWatch: probe request returned no features.")
             return pd.DataFrame()
 
-        sample = records[0]
+        sample = probe[0]
         name_field = self._first_present(sample, _NAME_FIELD_CANDIDATES)
         date_field = self._first_present(sample, _DATE_FIELD_CANDIDATES)
         value_field = self._first_present(sample, _VALUE_FIELD_CANDIDATES)
@@ -123,18 +149,25 @@ class IMFPortWatchAdapter(SourceAdapter):
             )
             return pd.DataFrame()
 
+        # Phase 2: ask the server itself for the most recent rows first, ordered by the field we
+        # just detected -- this is what actually fixes "got an arbitrary early slice of history."
+        records = self._fetch_page({
+            "resultRecordCount": str(self.lookback_records),
+            "orderByFields": f"{date_field} DESC",
+        })
+        if not records:
+            log.warning("IMF PortWatch: ordered request returned no features (orderByFields=%s).", date_field)
+            return pd.DataFrame()
+
         # Keep only rows matching our tracked chokepoints, then take the latest observation per
-        # chokepoint (the feature server returns a long history; ordering is not guaranteed).
+        # chokepoint (should now be within the first few dozen rows given the DESC ordering, but
+        # scan the whole page defensively in case of duplicate/unsorted ties).
         latest_by_chokepoint: dict = {}
         for attrs in records:
             raw_name = attrs.get(name_field)
             if not raw_name:
                 continue
-            raw_name_lower = str(raw_name).lower()
-            matched = next(
-                (cp for cp in self.chokepoints if cp.lower() in raw_name_lower or raw_name_lower in cp.lower()),
-                None,
-            )
+            matched = self._match_chokepoint(str(raw_name), self.chokepoints)
             if matched is None:
                 continue
             obs_date = self._parse_date(attrs.get(date_field))
