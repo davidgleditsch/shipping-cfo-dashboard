@@ -58,12 +58,37 @@ jobs:
         # machine's file). This step force-adds the one canonical file so scheduled runs persist
         # history in the repo. If you'd rather not version a binary DB file, remove this step and the
         # `git add -f` line below and instead upload it as a workflow artifact.
+        #
+        # The push is retried with a fetch+rebase in between attempts, because `main` can move
+        # between checkout and this step -- e.g. a human push (GitHub Desktop) landing while this
+        # job is running, or two scheduled runs overlapping. If a rebase can't apply cleanly (only
+        # plausible conflict here is this exact binary file having also changed upstream), we fall
+        # back to a merge that keeps *this* run's freshly regenerated file -- it's a deterministic
+        # rebuild each run, so recency wins rather than trying to reconcile two binary blobs.
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -f data/duckdb/shipping.duckdb
-          git diff --cached --quiet && echo "No data changes to commit." || git commit -m "chore: scheduled data refresh [skip ci]"
-          git push
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: scheduled data refresh [skip ci]"
+          for i in 1 2 3 4 5; do
+            if git push; then
+              echo "Pushed on attempt $i."
+              exit 0
+            fi
+            echo "Push rejected (attempt $i) -- fetching and rebasing onto latest main."
+            git fetch origin main
+            if ! git rebase origin/main; then
+              echo "Rebase conflict -- falling back to merge, keeping this run's file."
+              git rebase --abort
+              git pull --no-rebase -X ours origin main --no-edit
+            fi
+          done
+          echo "Failed to push after 5 attempts."
+          exit 1
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
